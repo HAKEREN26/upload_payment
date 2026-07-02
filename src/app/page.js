@@ -100,7 +100,7 @@ export default function Home() {
   if (submitted) {
     return (
       <>
-        <style>{css}</style>
+        <style dangerouslySetInnerHTML={{ __html: css }} />
         <Header />
         <div className="pw">
           <div className="success">
@@ -116,7 +116,7 @@ export default function Home() {
 
   return (
     <>
-      <style>{css}</style>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
       <Header />
       <div className="pw">
         <div className="title-block">
