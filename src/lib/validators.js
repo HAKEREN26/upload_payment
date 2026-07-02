@@ -7,7 +7,7 @@ function isValidPhone(value) {
   return /^[\d\s\-\+\(\)]{7,15}$/.test((value || '').trim());
 }
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_FILE_TYPE_PREFIXES = ['image/', 'application/pdf'];
 
 function isValidFile(file) {
@@ -23,7 +23,7 @@ function validateForm({ name, phone, email, file }) {
   else if (!isValidPhone(phone)) errors.phone = 'Enter a valid phone number';
   if (email && !isValidEmail(email)) errors.email = 'Enter a valid email address';
   if (!file) errors.file = 'Please attach proof of bank transfer';
-  else if (!isValidFile(file)) errors.file = 'File must be an image or PDF under 10MB';
+  else if (!isValidFile(file)) errors.file = 'File must be an image or PDF under 20MB';
   return errors;
 }
 

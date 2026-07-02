@@ -178,7 +178,7 @@ export default function Home() {
                   accept="image/*,application/pdf"
                   onChange={e => setFile(e.target.files?.[0] || null)}
                 />
-                {file ? "Click to change file" : "Click to select an image or PDF (max 10MB)"}
+                {file ? "Click to change file" : "Click to select an image or PDF (max 20MB)"}
                 {file && <div className="file-name">{file.name}</div>}
               </label>
               {showErrors && errors.file && <p className="errmsg">{errors.file}</p>}

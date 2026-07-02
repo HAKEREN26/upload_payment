@@ -26,8 +26,8 @@ test('isValidFile rejects a missing file', () => {
   assert.equal(isValidFile(null), false);
 });
 
-test('isValidFile rejects a file over 10MB', () => {
-  assert.equal(isValidFile({ size: 11 * 1024 * 1024, type: 'image/png' }), false);
+test('isValidFile rejects a file over 20MB', () => {
+  assert.equal(isValidFile({ size: 21 * 1024 * 1024, type: 'image/png' }), false);
 });
 
 test('isValidFile rejects an unsupported type', () => {
