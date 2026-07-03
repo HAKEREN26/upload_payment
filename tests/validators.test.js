@@ -34,12 +34,20 @@ test('isValidPhone rejects a number with too many digits (13)', () => {
   assert.equal(isValidPhone('0506561651616'), false);
 });
 
-test('isValidPhone accepts a 9-digit number without a leading zero', () => {
-  assert.equal(isValidPhone('501234567'), true);
+test('isValidPhone rejects a 9-digit number without a leading zero', () => {
+  assert.equal(isValidPhone('501234567'), false);
 });
 
-test('isValidPhone accepts a 12-digit number with the 972 country code', () => {
-  assert.equal(isValidPhone('+972501234567'), true);
+test('isValidPhone rejects a 12-digit number with the 972 country code', () => {
+  assert.equal(isValidPhone('+972501234567'), false);
+});
+
+test('isValidPhone accepts a well-formed number without dashes', () => {
+  assert.equal(isValidPhone('0501234567'), true);
+});
+
+test('isValidPhone rejects a 10-digit number not starting with 0', () => {
+  assert.equal(isValidPhone('1501234567'), false);
 });
 
 test('isValidFile rejects a missing file', () => {

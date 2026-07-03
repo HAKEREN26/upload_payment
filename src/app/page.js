@@ -153,8 +153,8 @@ export default function Home() {
                 className={showErrors && errors.phone ? "err" : ""}
                 value={f.phone}
                 onChange={e => set("phone", e.target.value)}
-                placeholder="+972 / 05X-XXXXXXX"
-                maxLength={15}
+                placeholder="05X-XXXXXXX"
+                maxLength={12}
               />
               {showErrors && errors.phone && <p className="errmsg">{errors.phone}</p>}
             </div>

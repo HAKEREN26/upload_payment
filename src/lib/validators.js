@@ -5,11 +5,10 @@ function isValidEmail(value) {
 
 function isValidPhone(value) {
   const trimmed = (value || '').trim();
-  if (!/^[\d\s\-\+\(\)]{7,15}$/.test(trimmed)) return false;
-  const digitCount = (trimmed.match(/\d/g) || []).length;
-  // Israeli numbers: 9 digits (no leading 0), 10 digits (local, leading 0),
-  // or 12 digits (with 972 country code, with or without a leading +).
-  return digitCount >= 9 && digitCount <= 12;
+  if (!/^[\d\s\-\(\)]{7,12}$/.test(trimmed)) return false;
+  // Israeli local format only: 05X-XXXXXXX — a leading 0 followed by 9 more digits (10 digits total).
+  const digitsOnly = trimmed.replace(/\D/g, '');
+  return /^0\d{9}$/.test(digitsOnly);
 }
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
