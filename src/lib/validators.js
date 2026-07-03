@@ -4,7 +4,10 @@ function isValidEmail(value) {
 }
 
 function isValidPhone(value) {
-  return /^[\d\s\-\+\(\)]{7,15}$/.test((value || '').trim());
+  const trimmed = (value || '').trim();
+  if (!/^[\d\s\-\+\(\)]{7,15}$/.test(trimmed)) return false;
+  const digitCount = (trimmed.match(/\d/g) || []).length;
+  return digitCount >= 7 && digitCount <= 15;
 }
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;

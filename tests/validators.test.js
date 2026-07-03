@@ -22,6 +22,14 @@ test('isValidPhone rejects a too-short value', () => {
   assert.equal(isValidPhone('123'), false);
 });
 
+test('isValidPhone rejects separators with no digits', () => {
+  assert.equal(isValidPhone('-------'), false);
+});
+
+test('isValidPhone rejects too few digits padded with separators', () => {
+  assert.equal(isValidPhone('05-----'), false);
+});
+
 test('isValidFile rejects a missing file', () => {
   assert.equal(isValidFile(null), false);
 });
