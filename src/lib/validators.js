@@ -7,7 +7,9 @@ function isValidPhone(value) {
   const trimmed = (value || '').trim();
   if (!/^[\d\s\-\+\(\)]{7,15}$/.test(trimmed)) return false;
   const digitCount = (trimmed.match(/\d/g) || []).length;
-  return digitCount >= 7 && digitCount <= 15;
+  // Israeli numbers: 9 digits (no leading 0), 10 digits (local, leading 0),
+  // or 12 digits (with 972 country code, with or without a leading +).
+  return digitCount >= 9 && digitCount <= 12;
 }
 
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
