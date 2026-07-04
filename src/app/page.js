@@ -10,7 +10,7 @@ const css = `
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#fff;font-family:'Open Sans',sans-serif;color:#222}
   .pw{max-width:600px;margin:0 auto;padding:0 16px 40px}
-  .hk-hdr{background:#fff;border-bottom:2px solid #1565c0;padding:14px 24px;display:flex;align-items:center;position:sticky;top:0;z-index:100}
+  .hk-hdr{background:#fff;border-bottom:2px solid #1565c0;padding:14px 24px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:100}
   .hk-hdr img{height:52px}
   .title-block{padding:28px 0 20px;text-align:center;border-bottom:1px solid #e0e8f5;margin-bottom:24px}
   .title-block h1{font-size:19px;font-weight:700;color:#1565c0;margin-bottom:6px;line-height:1.4}
