@@ -5,7 +5,6 @@ import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validator
 
 const LANG_MAP = [
   { code: "", label: "English (Original)" },
-  { code: "tl", label: "Tagalog" },
   { code: "ro", label: "Romanian" },
   { code: "uk", label: "Ukrainian" },
   { code: "ru", label: "Russian" },
@@ -17,7 +16,6 @@ const LANG_MAP = [
   { code: "th", label: "Thai" },
   { code: "id", label: "Indonesian" },
   { code: "vi", label: "Vietnamese" },
-  { code: "he", label: "Hebrew" },
 ];
 
 function handleLangChange(e) {
@@ -86,7 +84,7 @@ function Header({ showTranslate }) {
     window.googleTranslateElementInit = function () {
       new window.google.translate.TranslateElement({
         pageLanguage: "en",
-        includedLanguages: "tl,ro,uk,ru,zh-CN,si,hi,ar,fil,th,id,vi,he",
+        includedLanguages: "ro,uk,ru,zh-CN,si,hi,ar,fil,th,id,vi",
         layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
         autoDisplay: false,
       }, "google_translate_element");
