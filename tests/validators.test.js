@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isValidEmail, isValidPhone, isValidFile, validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } = require('../src/lib/validators');
+const { isValidEmail, isValidPhone, isValidFile, isValidNameChars, isValidPassportIdChars, validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } = require('../src/lib/validators');
 
 test('isValidEmail accepts empty string (optional field)', () => {
   assert.equal(isValidEmail(''), true);
@@ -48,6 +48,38 @@ test('isValidPhone accepts a well-formed number without dashes', () => {
 
 test('isValidPhone rejects a 10-digit number not starting with 0', () => {
   assert.equal(isValidPhone('1501234567'), false);
+});
+
+test('isValidNameChars accepts an English name', () => {
+  assert.equal(isValidNameChars('Maria Santos'), true);
+});
+
+test('isValidNameChars accepts a Hebrew name', () => {
+  assert.equal(isValidNameChars('משה כהן'), true);
+});
+
+test('isValidNameChars accepts a mixed Hebrew/English name', () => {
+  assert.equal(isValidNameChars("O'Brien-כהן"), true);
+});
+
+test('isValidNameChars rejects Cyrillic characters', () => {
+  assert.equal(isValidNameChars('Мария Сантос'), false);
+});
+
+test('isValidNameChars rejects Thai characters', () => {
+  assert.equal(isValidNameChars('มาเรีย'), false);
+});
+
+test('isValidPassportIdChars accepts an alphanumeric ID', () => {
+  assert.equal(isValidPassportIdChars('AB1234567'), true);
+});
+
+test('isValidPassportIdChars accepts a Hebrew ID', () => {
+  assert.equal(isValidPassportIdChars('א123456'), true);
+});
+
+test('isValidPassportIdChars rejects Arabic characters', () => {
+  assert.equal(isValidPassportIdChars('١٢٣٤٥٦٧٨٩'), false);
 });
 
 test('isValidFile rejects a missing file', () => {
@@ -132,4 +164,28 @@ test('validateForm accepts any option from SERVICE_OPTIONS', () => {
 
 test('DEFAULT_SERVICE is Salary Rights Calculation', () => {
   assert.equal(DEFAULT_SERVICE, 'Salary Rights Calculation');
+});
+
+test('validateForm rejects a name written in a non-Hebrew/English script', () => {
+  const errors = validateForm({
+    name: 'Мария Сантос',
+    passportId: 'AB1234567',
+    phone: '050-1234567',
+    email: '',
+    service: DEFAULT_SERVICE,
+    file: { size: 1000, type: 'image/jpeg' },
+  });
+  assert.equal(errors.name, 'Full name must be in Hebrew or English only');
+});
+
+test('validateForm rejects a passport/ID written in a non-Hebrew/English script', () => {
+  const errors = validateForm({
+    name: 'Maria Santos',
+    passportId: '١٢٣٤٥٦٧٨٩',
+    phone: '050-1234567',
+    email: '',
+    service: DEFAULT_SERVICE,
+    file: { size: 1000, type: 'image/jpeg' },
+  });
+  assert.equal(errors.passportId, 'Passport/ID must be in Hebrew or English only');
 });

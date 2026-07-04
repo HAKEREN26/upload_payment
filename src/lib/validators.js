@@ -11,6 +11,19 @@ function isValidPhone(value) {
   return /^0\d{9}$/.test(digitsOnly);
 }
 
+// Hebrew (א-ת) or English letters, plus spaces/hyphens/apostrophes/periods for names.
+const NAME_CHARS_REGEX = /^[a-zA-Zא-ת\s\-'.]+$/;
+// Hebrew or English letters plus digits/hyphens/spaces for ID/passport numbers.
+const PASSPORT_ID_CHARS_REGEX = /^[a-zA-Z0-9א-ת\s\-]+$/;
+
+function isValidNameChars(value) {
+  return NAME_CHARS_REGEX.test((value || '').trim());
+}
+
+function isValidPassportIdChars(value) {
+  return PASSPORT_ID_CHARS_REGEX.test((value || '').trim());
+}
+
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_FILE_TYPE_PREFIXES = ['image/', 'application/pdf'];
 
@@ -32,7 +45,9 @@ const DEFAULT_SERVICE = SERVICE_OPTIONS[0];
 function validateForm({ name, passportId, phone, email, service, file }) {
   const errors = {};
   if (!name || !name.trim()) errors.name = 'Full name is required';
+  else if (!isValidNameChars(name)) errors.name = 'Full name must be in Hebrew or English only';
   if (!passportId || !passportId.trim()) errors.passportId = 'Passport/ID is required';
+  else if (!isValidPassportIdChars(passportId)) errors.passportId = 'Passport/ID must be in Hebrew or English only';
   if (!phone || !phone.trim()) errors.phone = 'Phone is required';
   else if (!isValidPhone(phone)) errors.phone = 'Enter a valid phone number';
   if (email && !isValidEmail(email)) errors.email = 'Enter a valid email address';
@@ -46,6 +61,8 @@ module.exports = {
   isValidEmail,
   isValidPhone,
   isValidFile,
+  isValidNameChars,
+  isValidPassportIdChars,
   validateForm,
   MAX_FILE_SIZE_BYTES,
   SERVICE_OPTIONS,
