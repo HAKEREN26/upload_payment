@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { LOGO_B64 } from "../lib/logo";
-import { validateForm } from "../lib/validators";
+import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
 
 const WEBHOOK_URL = "https://hook.eu1.make.com/mxzz1t7nf666h6xwyfcg71hat1b8zms2";
 
@@ -19,9 +19,10 @@ const css = `
   .fc-body{padding:24px 20px}
   .field{margin-bottom:16px}
   .field label{display:block;font-size:13px;font-weight:600;color:#1565c0;margin-bottom:5px}
-  .field input[type=text],.field input[type=tel],.field input[type=email]{width:100%;padding:10px 12px;border:1.5px solid #ccc;border-radius:5px;font-size:14px;font-family:inherit;color:#222;background:#fafafa;outline:none}
-  .field input:focus{border-color:#1565c0;background:#fff}
-  .field input.err{border-color:#e53935 !important;background:#fff5f5}
+  .field input[type=text],.field input[type=tel],.field input[type=email],.field select{width:100%;padding:10px 12px;border:1.5px solid #ccc;border-radius:5px;font-size:14px;font-family:inherit;color:#222;background:#fafafa;outline:none}
+  .field select{cursor:pointer}
+  .field input:focus,.field select:focus{border-color:#1565c0;background:#fff}
+  .field input.err,.field select.err{border-color:#e53935 !important;background:#fff5f5}
   .field .errmsg{color:#e53935;font-size:12px;margin-top:4px}
   .req-star{color:#e53935}
   .file-drop{display:block;border:1.5px dashed #90caf9;border-radius:6px;padding:18px;text-align:center;background:#f8fbff;cursor:pointer;font-size:13px;color:#1565c0;font-weight:600}
@@ -41,7 +42,7 @@ const css = `
   .hk-ftr p{margin-bottom:3px}
 `;
 
-const INITIAL = { name: "", phone: "", email: "" };
+const INITIAL = { name: "", passportId: "", phone: "", email: "", service: DEFAULT_SERVICE };
 
 function Header() {
   return (
@@ -83,8 +84,10 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append("name", f.name);
+      formData.append("passportId", f.passportId);
       formData.append("phone", f.phone);
       formData.append("email", f.email || "");
+      formData.append("service", f.service);
       formData.append("file", file);
 
       const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });
@@ -147,6 +150,18 @@ export default function Home() {
             </div>
 
             <div className="field">
+              <label>Passport/ID<span className="req-star"> *</span></label>
+              <input
+                type="text"
+                className={showErrors && errors.passportId ? "err" : ""}
+                value={f.passportId}
+                onChange={e => set("passportId", e.target.value)}
+                placeholder="Passport or ID number"
+              />
+              {showErrors && errors.passportId && <p className="errmsg">{errors.passportId}</p>}
+            </div>
+
+            <div className="field">
               <label>Phone<span className="req-star"> *</span></label>
               <input
                 type="tel"
@@ -169,6 +184,20 @@ export default function Home() {
                 placeholder="you@example.com"
               />
               {showErrors && errors.email && <p className="errmsg">{errors.email}</p>}
+            </div>
+
+            <div className="field">
+              <label>Which service is this for?<span className="req-star"> *</span></label>
+              <select
+                className={showErrors && errors.service ? "err" : ""}
+                value={f.service}
+                onChange={e => set("service", e.target.value)}
+              >
+                {SERVICE_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              {showErrors && errors.service && <p className="errmsg">{errors.service}</p>}
             </div>
 
             <div className="field">

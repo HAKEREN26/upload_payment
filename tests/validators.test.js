@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isValidEmail, isValidPhone, isValidFile, validateForm } = require('../src/lib/validators');
+const { isValidEmail, isValidPhone, isValidFile, validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } = require('../src/lib/validators');
 
 test('isValidEmail accepts empty string (optional field)', () => {
   assert.equal(isValidEmail(''), true);
@@ -70,10 +70,12 @@ test('isValidFile accepts an image under the size limit', () => {
   assert.equal(isValidFile({ size: 1000, type: 'image/jpeg' }), true);
 });
 
-test('validateForm requires name, phone, and file; email is optional', () => {
-  const errors = validateForm({ name: '', phone: '', email: '', file: null });
+test('validateForm requires name, passportId, phone, service, and file; email is optional', () => {
+  const errors = validateForm({ name: '', passportId: '', phone: '', email: '', service: '', file: null });
   assert.equal(errors.name, 'Full name is required');
+  assert.equal(errors.passportId, 'Passport/ID is required');
   assert.equal(errors.phone, 'Phone is required');
+  assert.equal(errors.service, 'Please select a service');
   assert.equal(errors.file, 'Please attach proof of bank transfer');
   assert.equal(errors.email, undefined);
 });
@@ -81,8 +83,10 @@ test('validateForm requires name, phone, and file; email is optional', () => {
 test('validateForm passes with required fields filled and no email', () => {
   const errors = validateForm({
     name: 'Maria Santos',
+    passportId: 'AB1234567',
     phone: '050-1234567',
     email: '',
+    service: DEFAULT_SERVICE,
     file: { size: 1000, type: 'image/jpeg' },
   });
   assert.deepEqual(errors, {});
@@ -91,9 +95,41 @@ test('validateForm passes with required fields filled and no email', () => {
 test('validateForm flags an invalid email only when one is provided', () => {
   const errors = validateForm({
     name: 'Maria Santos',
+    passportId: 'AB1234567',
     phone: '050-1234567',
     email: 'not-an-email',
+    service: DEFAULT_SERVICE,
     file: { size: 1000, type: 'image/jpeg' },
   });
   assert.equal(errors.email, 'Enter a valid email address');
+});
+
+test('validateForm rejects a service value outside SERVICE_OPTIONS', () => {
+  const errors = validateForm({
+    name: 'Maria Santos',
+    passportId: 'AB1234567',
+    phone: '050-1234567',
+    email: '',
+    service: 'Not A Real Service',
+    file: { size: 1000, type: 'image/jpeg' },
+  });
+  assert.equal(errors.service, 'Please select a service');
+});
+
+test('validateForm accepts any option from SERVICE_OPTIONS', () => {
+  for (const service of SERVICE_OPTIONS) {
+    const errors = validateForm({
+      name: 'Maria Santos',
+      passportId: 'AB1234567',
+      phone: '050-1234567',
+      email: '',
+      service,
+      file: { size: 1000, type: 'image/jpeg' },
+    });
+    assert.equal(errors.service, undefined, `expected "${service}" to be a valid service`);
+  }
+});
+
+test('DEFAULT_SERVICE is Salary Rights Calculation', () => {
+  assert.equal(DEFAULT_SERVICE, 'Salary Rights Calculation');
 });
