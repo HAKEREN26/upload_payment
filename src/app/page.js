@@ -12,7 +12,6 @@ const LANG_MAP = [
   { code: "si", label: "Sinhala" },
   { code: "hi", label: "Hindi" },
   { code: "ar", label: "Arabic" },
-  { code: "fil", label: "Filipino" },
   { code: "th", label: "Thai" },
   { code: "id", label: "Indonesian" },
   { code: "vi", label: "Vietnamese" },
@@ -84,7 +83,7 @@ function Header({ showTranslate }) {
     window.googleTranslateElementInit = function () {
       new window.google.translate.TranslateElement({
         pageLanguage: "en",
-        includedLanguages: "ro,uk,ru,zh-CN,si,hi,ar,fil,th,id,vi",
+        includedLanguages: "ro,uk,ru,zh-CN,si,hi,ar,th,id,vi",
         layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
         autoDisplay: false,
       }, "google_translate_element");
