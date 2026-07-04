@@ -1,7 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LOGO_B64 } from "../lib/logo";
 import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
+
+const LANG_MAP = [
+  { code: "", label: "English (Original)" },
+  { code: "tl", label: "Tagalog" },
+  { code: "ro", label: "Romanian" },
+  { code: "uk", label: "Ukrainian" },
+  { code: "ru", label: "Russian" },
+  { code: "zh-CN", label: "Chinese" },
+  { code: "si", label: "Sinhala" },
+  { code: "hi", label: "Hindi" },
+  { code: "ar", label: "Arabic" },
+  { code: "fil", label: "Filipino" },
+  { code: "th", label: "Thai" },
+  { code: "id", label: "Indonesian" },
+  { code: "vi", label: "Vietnamese" },
+  { code: "he", label: "Hebrew" },
+];
+
+function handleLangChange(e) {
+  const code = e.target.value;
+  if (!code) {
+    document.cookie = "googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "googtrans=;path=/;domain=" + window.location.hostname + ";expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.reload();
+    return;
+  }
+  document.cookie = "googtrans=/en/" + code + ";path=/";
+  document.cookie = "googtrans=/en/" + code + ";path=/;domain=" + window.location.hostname;
+  const sel = document.querySelector("#google_translate_element select");
+  if (sel) { sel.value = code; sel.dispatchEvent(new Event("change")); }
+  else window.location.reload();
+}
 
 const WEBHOOK_URL = "https://hook.eu1.make.com/mxzz1t7nf666h6xwyfcg71hat1b8zms2";
 
@@ -12,6 +44,8 @@ const css = `
   .pw{max-width:600px;margin:0 auto;padding:0 16px 40px}
   .hk-hdr{background:#fff;border-bottom:2px solid #1565c0;padding:14px 24px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:100}
   .hk-hdr img{height:72px}
+  .lang-switch{position:absolute;right:16px;top:50%;transform:translateY(-50%)}
+  .lang-switch select{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #90caf9;color:#1565c0;font-weight:600;cursor:pointer;font-family:inherit}
   .title-block{padding:28px 0 20px;text-align:center;border-bottom:1px solid #e0e8f5;margin-bottom:24px}
   .title-block h1{font-size:19px;font-weight:700;color:#1565c0;margin-bottom:6px;line-height:1.4}
   .title-block h1.he{direction:rtl;font-size:20px}
@@ -44,10 +78,36 @@ const css = `
 
 const INITIAL = { name: "", passportId: "", phone: "", email: "", service: DEFAULT_SERVICE };
 
-function Header() {
+function Header({ showTranslate }) {
+  useEffect(() => {
+    if (!showTranslate) return;
+    if (window.googleTranslateElementInit) return;
+    document.documentElement.lang = "en";
+    window.googleTranslateElementInit = function () {
+      new window.google.translate.TranslateElement({
+        pageLanguage: "en",
+        includedLanguages: "tl,ro,uk,ru,zh-CN,si,hi,ar,fil,th,id,vi,he",
+        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false,
+      }, "google_translate_element");
+    };
+    const s = document.createElement("script");
+    s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&hl=en";
+    s.async = true;
+    document.head.appendChild(s);
+  }, [showTranslate]);
+
   return (
     <div className="hk-hdr">
       <img src={LOGO_B64} alt="Hakeren" />
+      {showTranslate && (
+        <div className="lang-switch">
+          <div id="google_translate_element" className="notranslate" translate="no" style={{ position: "absolute", left: "-9999px" }} />
+          <select className="notranslate" translate="no" onChange={handleLangChange}>
+            {LANG_MAP.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,7 +180,7 @@ export default function Home() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Header />
+      <Header showTranslate />
       <div className="pw">
         <div className="title-block">
           <h1 className="he">טופס העלאת תשלום העברה בנקאית</h1>
@@ -138,7 +198,7 @@ export default function Home() {
         <div className="fc">
           <div className="fc-body">
             <div className="field">
-              <label>Full name<span className="req-star"> *</span></label>
+              <label>Full name / שם מלא<span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.name ? "err" : ""}
@@ -150,7 +210,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Passport/ID<span className="req-star"> *</span></label>
+              <label>Passport/ID / דרכון / ת.ז.<span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.passportId ? "err" : ""}
@@ -162,7 +222,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Phone<span className="req-star"> *</span></label>
+              <label>Phone / טלפון<span className="req-star"> *</span></label>
               <input
                 type="tel"
                 className={showErrors && errors.phone ? "err" : ""}
@@ -175,7 +235,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Email</label>
+              <label>Email / אימייל</label>
               <input
                 type="email"
                 className={showErrors && errors.email ? "err" : ""}
@@ -187,7 +247,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Which service is this for?<span className="req-star"> *</span></label>
+              <label>Which service is this for? / עבור איזה שירות<span className="req-star"> *</span></label>
               <select
                 className={showErrors && errors.service ? "err" : ""}
                 value={f.service}
@@ -201,7 +261,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Payment proof file<span className="req-star"> *</span></label>
+              <label>Payment proof file / קובץ אישור תשלום<span className="req-star"> *</span></label>
               <label className={`file-drop${showErrors && errors.file ? " err" : ""}`}>
                 <input
                   type="file"
