@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import { LOGO_B64 } from "../lib/logo";
 import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
+import { TRANSLATIONS } from "../lib/translations";
 
-// Google's widget uses legacy language codes: Hebrew is "iw" (not "he"),
-// Filipino/Tagalog is "tl" ("fil" gets silently dropped from the combo).
+// UI translations are pre-generated via Google Translate and baked into
+// src/lib/translations.js — no runtime dependency on Google's widget.
 const LANG_MAP = [
   { code: "", label: "English (Original)" },
   { code: "tl", label: "Filipino (Tagalog)" },
@@ -20,27 +21,6 @@ const LANG_MAP = [
   { code: "vi", label: "Vietnamese" },
   { code: "iw", label: "Hebrew / עברית" },
 ];
-
-function handleLangChange(e) {
-  const code = e.target.value;
-  if (!code) {
-    document.cookie = "googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "googtrans=;path=/;domain=" + window.location.hostname + ";expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    window.location.reload();
-    return;
-  }
-  document.cookie = "googtrans=/en/" + code + ";path=/";
-  document.cookie = "googtrans=/en/" + code + ";path=/;domain=" + window.location.hostname;
-  // The default widget layout renders a real <select class="goog-te-combo">;
-  // setting its value and firing change is the reliable programmatic trigger.
-  const combo = document.querySelector(".goog-te-combo");
-  if (combo) {
-    combo.value = code;
-    combo.dispatchEvent(new Event("change", { bubbles: true }));
-  } else {
-    window.location.reload();
-  }
-}
 
 const WEBHOOK_URL = "https://hook.eu1.make.com/mxzz1t7nf666h6xwyfcg71hat1b8zms2";
 
@@ -81,8 +61,6 @@ const css = `
   .success p{font-size:13px;color:#555;line-height:1.7}
   .hk-ftr{background:#f0f4f8;border-top:2px solid #1565c0;padding:18px 24px;text-align:center;font-size:11px;color:#555;line-height:1.8;margin-top:16px}
   .hk-ftr p{margin-bottom:3px}
-  .goog-te-banner-frame.skiptranslate,.VIpgJd-ZVi9od-ORHb-OEVmcd{display:none !important}
-  body{top:0 !important}
   @media(max-width:600px){
     .hk-hdr{padding:10px 12px 8px;flex-direction:column;gap:6px}
     .hk-hdr img{height:48px}
@@ -95,38 +73,15 @@ const css = `
 
 const INITIAL = { name: "", passportId: "", phone: "", email: "", service: DEFAULT_SERVICE };
 
-function Header({ showTranslate }) {
-  useEffect(() => {
-    if (!showTranslate) return;
-    if (window.googleTranslateElementInit) return;
-    document.documentElement.lang = "en";
-    window.googleTranslateElementInit = function () {
-      // Default layout (no `layout` option) renders a <select class="goog-te-combo">
-      // that handleLangChange drives programmatically. The SIMPLE layout renders
-      // only a link+iframe menu with no select, which cannot be triggered reliably.
-      new window.google.translate.TranslateElement({
-        pageLanguage: "en",
-        includedLanguages: "tl,ro,uk,ru,zh-CN,si,hi,ar,th,id,vi,iw",
-        autoDisplay: false,
-      }, "google_translate_element");
-    };
-    const s = document.createElement("script");
-    s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&hl=en";
-    s.async = true;
-    document.head.appendChild(s);
-  }, [showTranslate]);
-
+function Header({ lang, onLangChange }) {
   return (
     <div className="hk-hdr">
       <img src={LOGO_B64} alt="Hakeren" />
-      {showTranslate && (
-        <div className="lang-switch">
-          <div id="google_translate_element" className="notranslate" translate="no" style={{ position: "absolute", left: "-9999px" }} />
-          <select className="notranslate" translate="no" onChange={handleLangChange}>
-            {LANG_MAP.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-          </select>
-        </div>
-      )}
+      <div className="lang-switch">
+        <select className="notranslate" translate="no" value={lang} onChange={e => onLangChange(e.target.value)}>
+          {LANG_MAP.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+        </select>
+      </div>
     </div>
   );
 }
@@ -149,11 +104,11 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [lang, setLang] = useState("");
 
-  // Google Translate wraps text nodes in <font> tags, which breaks React's
-  // removeChild/insertBefore when it later updates those nodes (e.g. the
-  // submit button label swapping to "Submitting..."). Guard both so a
-  // translated page can't crash mid-submit.
+  // Guard against browser auto-translate (e.g. Chrome's built-in page
+  // translation) wrapping text nodes in <font> tags, which breaks React's
+  // removeChild/insertBefore on later re-renders.
   useEffect(() => {
     const origRemoveChild = Node.prototype.removeChild;
     const origInsertBefore = Node.prototype.insertBefore;
@@ -170,6 +125,15 @@ export default function Home() {
       Node.prototype.insertBefore = origInsertBefore;
     };
   }, []);
+
+  // Translate a UI string into the selected language; falls back to English.
+  const t = s => (lang && TRANSLATIONS[lang] && TRANSLATIONS[lang][s]) || s;
+
+  // Bilingual label: translated English part + permanent Hebrew part.
+  // When Hebrew is the selected language, show only the Hebrew once.
+  const L = (en, he) => (lang === "iw"
+    ? <span className="notranslate" translate="no">{he}</span>
+    : <>{t(en)} / <span className="notranslate" translate="no">{he}</span></>);
 
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
 
@@ -204,12 +168,12 @@ export default function Home() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: css }} />
-        <Header />
+        <Header lang={lang} onLangChange={setLang} />
         <div className="pw">
           <div className="success">
             <div className="icon">&#10003;</div>
-            <h2>Form submitted successfully</h2>
-            <p>Your payment proof has been received.<br />Our team will review it shortly.</p>
+            <h2>{t("Form submitted successfully")}</h2>
+            <p>{t("Your payment proof has been received.")}<br />{t("Our team will review it shortly.")}</p>
           </div>
         </div>
         <Footer />
@@ -220,49 +184,49 @@ export default function Home() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Header showTranslate />
+      <Header lang={lang} onLangChange={setLang} />
       <div className="pw">
         <div className="title-block">
           <h1 className="he notranslate" translate="no">טופס העלאת תשלום העברה בנקאית</h1>
-          <h1>Bank Transfer Payment Upload Form</h1>
+          <h1>{lang === "iw" || lang === "ru" ? "Bank Transfer Payment Upload Form" : t("Bank Transfer Payment Upload Form")}</h1>
           <h1 className="notranslate" translate="no">Форма загрузки банковского перевода</h1>
         </div>
 
         {submitError && (
           <div className="err-banner">
-            <strong>Submission failed</strong>
-            {submitError}
+            <strong>{t("Submission failed")}</strong>
+            {t(submitError)}
           </div>
         )}
 
         <div className="fc">
           <div className="fc-body">
             <div className="field">
-              <label>Full name / <span className="notranslate" translate="no">שם מלא</span><span className="req-star"> *</span></label>
+              <label>{L("Full name", "שם מלא")}<span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.name ? "err" : ""}
                 value={f.name}
                 onChange={e => set("name", e.target.value)}
-                placeholder="Full name"
+                placeholder={t("Full name")}
               />
-              {showErrors && errors.name && <p className="errmsg">{errors.name}</p>}
+              {showErrors && errors.name && <p className="errmsg">{t(errors.name)}</p>}
             </div>
 
             <div className="field">
-              <label>Passport/ID / <span className="notranslate" translate="no">דרכון / ת.ז.</span><span className="req-star"> *</span></label>
+              <label>{L("Passport/ID", "דרכון / ת.ז.")}<span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.passportId ? "err" : ""}
                 value={f.passportId}
                 onChange={e => set("passportId", e.target.value)}
-                placeholder="Passport or ID number"
+                placeholder={t("Passport or ID number")}
               />
-              {showErrors && errors.passportId && <p className="errmsg">{errors.passportId}</p>}
+              {showErrors && errors.passportId && <p className="errmsg">{t(errors.passportId)}</p>}
             </div>
 
             <div className="field">
-              <label>Phone / <span className="notranslate" translate="no">טלפון</span><span className="req-star"> *</span></label>
+              <label>{L("Phone", "טלפון")}<span className="req-star"> *</span></label>
               <input
                 type="tel"
                 className={showErrors && errors.phone ? "err" : ""}
@@ -271,11 +235,11 @@ export default function Home() {
                 placeholder="05X-XXXXXXX"
                 maxLength={12}
               />
-              {showErrors && errors.phone && <p className="errmsg">{errors.phone}</p>}
+              {showErrors && errors.phone && <p className="errmsg">{t(errors.phone)}</p>}
             </div>
 
             <div className="field">
-              <label>Email / <span className="notranslate" translate="no">אימייל</span></label>
+              <label>{L("Email", "אימייל")}</label>
               <input
                 type="email"
                 className={showErrors && errors.email ? "err" : ""}
@@ -283,11 +247,11 @@ export default function Home() {
                 onChange={e => set("email", e.target.value)}
                 placeholder="you@example.com"
               />
-              {showErrors && errors.email && <p className="errmsg">{errors.email}</p>}
+              {showErrors && errors.email && <p className="errmsg">{t(errors.email)}</p>}
             </div>
 
             <div className="field">
-              <label>Which service is this for? / <span className="notranslate" translate="no">עבור איזה שירות</span><span className="req-star"> *</span></label>
+              <label>{L("Which service is this for?", "עבור איזה שירות")}<span className="req-star"> *</span></label>
               <select
                 className={`notranslate${showErrors && errors.service ? " err" : ""}`}
                 translate="no"
@@ -298,25 +262,25 @@ export default function Home() {
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
-              {showErrors && errors.service && <p className="errmsg">{errors.service}</p>}
+              {showErrors && errors.service && <p className="errmsg">{t(errors.service)}</p>}
             </div>
 
             <div className="field">
-              <label>Payment proof file / <span className="notranslate" translate="no">קובץ אישור תשלום</span><span className="req-star"> *</span></label>
+              <label>{L("Payment proof file", "קובץ אישור תשלום")}<span className="req-star"> *</span></label>
               <label className={`file-drop${showErrors && errors.file ? " err" : ""}`}>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={e => setFile(e.target.files?.[0] || null)}
                 />
-                {file ? "Click to change file" : "Click to select an image or PDF (max 20MB)"}
+                {file ? t("Click to change file") : t("Click to select an image or PDF (max 20MB)")}
                 {file && <div className="file-name">{file.name}</div>}
               </label>
-              {showErrors && errors.file && <p className="errmsg">{errors.file}</p>}
+              {showErrors && errors.file && <p className="errmsg">{t(errors.file)}</p>}
             </div>
 
             <button className="btn-submit" disabled={submitting} onClick={handleSubmit}>
-              {submitting ? "Submitting..." : "Submit Payment Proof"}
+              {submitting ? t("Submitting...") : t("Submit Payment Proof")}
             </button>
           </div>
         </div>
