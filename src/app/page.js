@@ -3,8 +3,11 @@ import { useState, useEffect } from "react";
 import { LOGO_B64 } from "../lib/logo";
 import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
 
+// Google's widget uses legacy language codes: Hebrew is "iw" (not "he"),
+// Filipino/Tagalog is "tl" ("fil" gets silently dropped from the combo).
 const LANG_MAP = [
   { code: "", label: "English (Original)" },
+  { code: "tl", label: "Filipino (Tagalog)" },
   { code: "ro", label: "Romanian" },
   { code: "uk", label: "Ukrainian" },
   { code: "ru", label: "Russian" },
@@ -15,6 +18,7 @@ const LANG_MAP = [
   { code: "th", label: "Thai" },
   { code: "id", label: "Indonesian" },
   { code: "vi", label: "Vietnamese" },
+  { code: "iw", label: "Hebrew / עברית" },
 ];
 
 function handleLangChange(e) {
@@ -27,9 +31,15 @@ function handleLangChange(e) {
   }
   document.cookie = "googtrans=/en/" + code + ";path=/";
   document.cookie = "googtrans=/en/" + code + ";path=/;domain=" + window.location.hostname;
-  const sel = document.querySelector("#google_translate_element select");
-  if (sel) { sel.value = code; sel.dispatchEvent(new Event("change")); }
-  else window.location.reload();
+  // The default widget layout renders a real <select class="goog-te-combo">;
+  // setting its value and firing change is the reliable programmatic trigger.
+  const combo = document.querySelector(".goog-te-combo");
+  if (combo) {
+    combo.value = code;
+    combo.dispatchEvent(new Event("change", { bubbles: true }));
+  } else {
+    window.location.reload();
+  }
 }
 
 const WEBHOOK_URL = "https://hook.eu1.make.com/mxzz1t7nf666h6xwyfcg71hat1b8zms2";
@@ -71,6 +81,16 @@ const css = `
   .success p{font-size:13px;color:#555;line-height:1.7}
   .hk-ftr{background:#f0f4f8;border-top:2px solid #1565c0;padding:18px 24px;text-align:center;font-size:11px;color:#555;line-height:1.8;margin-top:16px}
   .hk-ftr p{margin-bottom:3px}
+  .goog-te-banner-frame.skiptranslate,.VIpgJd-ZVi9od-ORHb-OEVmcd{display:none !important}
+  body{top:0 !important}
+  @media(max-width:600px){
+    .hk-hdr{padding:10px 12px 8px;flex-direction:column;gap:6px}
+    .hk-hdr img{height:48px}
+    .lang-switch{position:static;transform:none}
+    .lang-switch select{font-size:12px;padding:3px 8px}
+    .title-block h1{font-size:16px}
+    .title-block h1.he{font-size:17px}
+  }
 `;
 
 const INITIAL = { name: "", passportId: "", phone: "", email: "", service: DEFAULT_SERVICE };
@@ -81,10 +101,12 @@ function Header({ showTranslate }) {
     if (window.googleTranslateElementInit) return;
     document.documentElement.lang = "en";
     window.googleTranslateElementInit = function () {
+      // Default layout (no `layout` option) renders a <select class="goog-te-combo">
+      // that handleLangChange drives programmatically. The SIMPLE layout renders
+      // only a link+iframe menu with no select, which cannot be triggered reliably.
       new window.google.translate.TranslateElement({
         pageLanguage: "en",
-        includedLanguages: "ro,uk,ru,zh-CN,si,hi,ar,th,id,vi",
-        layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+        includedLanguages: "tl,ro,uk,ru,zh-CN,si,hi,ar,th,id,vi,iw",
         autoDisplay: false,
       }, "google_translate_element");
     };
@@ -127,6 +149,27 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+
+  // Google Translate wraps text nodes in <font> tags, which breaks React's
+  // removeChild/insertBefore when it later updates those nodes (e.g. the
+  // submit button label swapping to "Submitting..."). Guard both so a
+  // translated page can't crash mid-submit.
+  useEffect(() => {
+    const origRemoveChild = Node.prototype.removeChild;
+    const origInsertBefore = Node.prototype.insertBefore;
+    Node.prototype.removeChild = function (child) {
+      if (child.parentNode !== this) return child;
+      return origRemoveChild.call(this, child);
+    };
+    Node.prototype.insertBefore = function (newNode, ref) {
+      if (ref && ref.parentNode !== this) return origInsertBefore.call(this, newNode, null);
+      return origInsertBefore.call(this, newNode, ref);
+    };
+    return () => {
+      Node.prototype.removeChild = origRemoveChild;
+      Node.prototype.insertBefore = origInsertBefore;
+    };
+  }, []);
 
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
 
@@ -180,9 +223,9 @@ export default function Home() {
       <Header showTranslate />
       <div className="pw">
         <div className="title-block">
-          <h1 className="he">טופס העלאת תשלום העברה בנקאית</h1>
+          <h1 className="he notranslate" translate="no">טופס העלאת תשלום העברה בנקאית</h1>
           <h1>Bank Transfer Payment Upload Form</h1>
-          <h1>Форма загрузки банковского перевода</h1>
+          <h1 className="notranslate" translate="no">Форма загрузки банковского перевода</h1>
         </div>
 
         {submitError && (
@@ -195,7 +238,7 @@ export default function Home() {
         <div className="fc">
           <div className="fc-body">
             <div className="field">
-              <label>Full name / שם מלא<span className="req-star"> *</span></label>
+              <label>Full name / <span className="notranslate" translate="no">שם מלא</span><span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.name ? "err" : ""}
@@ -207,7 +250,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Passport/ID / דרכון / ת.ז.<span className="req-star"> *</span></label>
+              <label>Passport/ID / <span className="notranslate" translate="no">דרכון / ת.ז.</span><span className="req-star"> *</span></label>
               <input
                 type="text"
                 className={showErrors && errors.passportId ? "err" : ""}
@@ -219,7 +262,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Phone / טלפון<span className="req-star"> *</span></label>
+              <label>Phone / <span className="notranslate" translate="no">טלפון</span><span className="req-star"> *</span></label>
               <input
                 type="tel"
                 className={showErrors && errors.phone ? "err" : ""}
@@ -232,7 +275,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Email / אימייל</label>
+              <label>Email / <span className="notranslate" translate="no">אימייל</span></label>
               <input
                 type="email"
                 className={showErrors && errors.email ? "err" : ""}
@@ -244,9 +287,10 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Which service is this for? / עבור איזה שירות<span className="req-star"> *</span></label>
+              <label>Which service is this for? / <span className="notranslate" translate="no">עבור איזה שירות</span><span className="req-star"> *</span></label>
               <select
-                className={showErrors && errors.service ? "err" : ""}
+                className={`notranslate${showErrors && errors.service ? " err" : ""}`}
+                translate="no"
                 value={f.service}
                 onChange={e => set("service", e.target.value)}
               >
@@ -258,7 +302,7 @@ export default function Home() {
             </div>
 
             <div className="field">
-              <label>Payment proof file / קובץ אישור תשלום<span className="req-star"> *</span></label>
+              <label>Payment proof file / <span className="notranslate" translate="no">קובץ אישור תשלום</span><span className="req-star"> *</span></label>
               <label className={`file-drop${showErrors && errors.file ? " err" : ""}`}>
                 <input
                   type="file"
