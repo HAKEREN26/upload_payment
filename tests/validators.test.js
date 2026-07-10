@@ -14,6 +14,14 @@ test('isValidEmail rejects a malformed address', () => {
   assert.equal(isValidEmail('not-an-email'), false);
 });
 
+test('isValidEmail rejects a non-English (Cyrillic) address', () => {
+  assert.equal(isValidEmail('мария@домен.рф'), false);
+});
+
+test('isValidEmail rejects a Hebrew address', () => {
+  assert.equal(isValidEmail('משה@דוגמה.קום'), false);
+});
+
 test('isValidPhone accepts a well-formed number', () => {
   assert.equal(isValidPhone('050-1234567'), true);
 });

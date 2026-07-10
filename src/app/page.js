@@ -154,6 +154,16 @@ export default function Home() {
 
   const set = (k, v) => setF(p => ({ ...p, [k]: v }));
 
+  // Per-field input filters: strip anything outside the allowed characters
+  // as the user types, so answers can only be written in Hebrew or English.
+  const FIELD_ALLOWED = {
+    name: /[^a-zA-Zא-ת\s\-'.]/g,
+    passportId: /[^a-zA-Z0-9א-ת\s\-]/g,
+    email: /[^A-Za-z0-9._%+\-@]/g,
+    phone: /[^\d\s\-()]/g,
+  };
+  const setFiltered = (k, v) => set(k, v.replace(FIELD_ALLOWED[k], ""));
+
   const handleSubmit = async () => {
     const currentErrors = validateForm({ ...f, file });
     setErrors(currentErrors);
@@ -224,7 +234,7 @@ export default function Home() {
                 type="text"
                 className={showErrors && errors.name ? "err" : ""}
                 value={f.name}
-                onChange={e => set("name", e.target.value)}
+                onChange={e => setFiltered("name", e.target.value)}
                 placeholder={t("Full name")}
               />
               {showErrors && errors.name && <p className="errmsg">{t(errors.name)}</p>}
@@ -236,7 +246,7 @@ export default function Home() {
                 type="text"
                 className={showErrors && errors.passportId ? "err" : ""}
                 value={f.passportId}
-                onChange={e => set("passportId", e.target.value)}
+                onChange={e => setFiltered("passportId", e.target.value)}
                 placeholder={t("Passport or ID number")}
               />
               {showErrors && errors.passportId && <p className="errmsg">{t(errors.passportId)}</p>}
@@ -248,7 +258,7 @@ export default function Home() {
                 type="tel"
                 className={showErrors && errors.phone ? "err" : ""}
                 value={f.phone}
-                onChange={e => set("phone", e.target.value)}
+                onChange={e => setFiltered("phone", e.target.value)}
                 placeholder="05X-XXXXXXX"
                 maxLength={12}
               />
@@ -261,7 +271,7 @@ export default function Home() {
                 type="email"
                 className={showErrors && errors.email ? "err" : ""}
                 value={f.email}
-                onChange={e => set("email", e.target.value)}
+                onChange={e => setFiltered("email", e.target.value)}
                 placeholder="you@example.com"
               />
               {showErrors && errors.email && <p className="errmsg">{t(errors.email)}</p>}
@@ -275,8 +285,9 @@ export default function Home() {
                 value={f.service}
                 onChange={e => set("service", e.target.value)}
               >
+                {/* Display text is translated; the submitted value stays the English string. */}
                 {SERVICE_OPTIONS.map(option => (
-                  <option key={option} value={option}>{option}</option>
+                  <option key={option} value={option}>{t(option)}</option>
                 ))}
               </select>
               {showErrors && errors.service && <p className="errmsg">{t(errors.service)}</p>}

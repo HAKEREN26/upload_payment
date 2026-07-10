@@ -1,6 +1,8 @@
 function isValidEmail(value) {
   if (!value) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  // English/ASCII characters only — answers must be in Hebrew or English,
+  // and email addresses are English-only by nature.
+  return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value.trim());
 }
 
 function isValidPhone(value) {
