@@ -1,26 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LOGO_B64 } from "../lib/logo";
 import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
-import { TRANSLATIONS } from "../lib/translations";
+import { LANGUAGES } from "../lib/languages";
 
-// UI translations are pre-generated via Google Translate and baked into
-// src/lib/translations.js — no runtime dependency on Google's widget.
-const LANG_MAP = [
-  { code: "", label: "English (Original)" },
-  { code: "tl", label: "Filipino (Tagalog)" },
-  { code: "ro", label: "Romanian" },
-  { code: "uk", label: "Ukrainian" },
-  { code: "ru", label: "Russian" },
-  { code: "zh-CN", label: "Chinese" },
-  { code: "si", label: "Sinhala" },
-  { code: "hi", label: "Hindi" },
-  { code: "ar", label: "Arabic" },
-  { code: "th", label: "Thai" },
-  { code: "id", label: "Indonesian" },
-  { code: "vi", label: "Vietnamese" },
-  { code: "iw", label: "Hebrew / עברית" },
-];
+// UI dictionaries are pre-generated via Google Translate (one JSON per
+// language under /i18n/) and fetched on demand when a language is chosen.
+// The most common languages for Hakeren's clients are pinned to the top.
+const PRIORITY_CODES = ["tl", "ro", "uk", "ru", "zh-CN", "si", "hi", "ar", "th", "id", "vi", "iw"];
+const PRIORITY_LANGS = PRIORITY_CODES
+  .map(code => LANGUAGES.find(l => l.code === code))
+  .filter(Boolean);
+const OTHER_LANGS = LANGUAGES.filter(l => !PRIORITY_CODES.includes(l.code));
 
 const WEBHOOK_URL = "https://hook.eu1.make.com/mxzz1t7nf666h6xwyfcg71hat1b8zms2";
 
@@ -32,7 +23,7 @@ const css = `
   .hk-hdr{background:#fff;border-bottom:2px solid #1565c0;padding:14px 24px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:100}
   .hk-hdr img{height:72px}
   .lang-switch{position:absolute;right:16px;top:50%;transform:translateY(-50%)}
-  .lang-switch select{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #90caf9;color:#1565c0;font-weight:600;cursor:pointer;font-family:inherit}
+  .lang-switch select{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #90caf9;color:#1565c0;font-weight:600;cursor:pointer;font-family:inherit;max-width:160px}
   .title-block{padding:28px 0 20px;text-align:center;border-bottom:1px solid #e0e8f5;margin-bottom:24px}
   .title-block h1{font-size:19px;font-weight:700;color:#1565c0;margin-bottom:6px;line-height:1.4}
   .title-block h1.he{direction:rtl;font-size:20px}
@@ -79,7 +70,13 @@ function Header({ lang, onLangChange }) {
       <img src={LOGO_B64} alt="Hakeren" />
       <div className="lang-switch">
         <select className="notranslate" translate="no" value={lang} onChange={e => onLangChange(e.target.value)}>
-          {LANG_MAP.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          <option value="">English (Original)</option>
+          <optgroup label="— Common —">
+            {PRIORITY_LANGS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </optgroup>
+          <optgroup label="— All languages —">
+            {OTHER_LANGS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </optgroup>
         </select>
       </div>
     </div>
@@ -105,6 +102,9 @@ export default function Home() {
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [lang, setLang] = useState("");
+  const [dict, setDict] = useState(null);
+  const dictCache = useRef({});
+  const latestLangReq = useRef("");
 
   // Guard against browser auto-translate (e.g. Chrome's built-in page
   // translation) wrapping text nodes in <font> tags, which breaks React's
@@ -126,8 +126,25 @@ export default function Home() {
     };
   }, []);
 
+  const changeLang = async code => {
+    setLang(code);
+    latestLangReq.current = code;
+    if (!code) { setDict(null); return; }
+    if (dictCache.current[code]) { setDict(dictCache.current[code]); return; }
+    try {
+      const res = await fetch(`/i18n/${code}.json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const d = await res.json();
+      dictCache.current[code] = d;
+      if (latestLangReq.current === code) setDict(d);
+    } catch {
+      // Dictionary unavailable — fall back to English silently.
+      if (latestLangReq.current === code) setDict(null);
+    }
+  };
+
   // Translate a UI string into the selected language; falls back to English.
-  const t = s => (lang && TRANSLATIONS[lang] && TRANSLATIONS[lang][s]) || s;
+  const t = s => (dict && dict[s]) || s;
 
   // Bilingual label: translated English part + permanent Hebrew part.
   // When Hebrew is the selected language, show only the Hebrew once.
@@ -168,7 +185,7 @@ export default function Home() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: css }} />
-        <Header lang={lang} onLangChange={setLang} />
+        <Header lang={lang} onLangChange={changeLang} />
         <div className="pw">
           <div className="success">
             <div className="icon">&#10003;</div>
@@ -184,7 +201,7 @@ export default function Home() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <Header lang={lang} onLangChange={setLang} />
+      <Header lang={lang} onLangChange={changeLang} />
       <div className="pw">
         <div className="title-block">
           <h1 className="he notranslate" translate="no">טופס העלאת תשלום העברה בנקאית</h1>
