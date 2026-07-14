@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isValidEmail, isValidPhone, isValidFile, isValidNameChars, isValidPassportIdChars, validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } = require('../src/lib/validators');
+const { isValidEmail, isValidPhone, isValidFile, isValidNameChars, isValidPassportIdChars, validateForm, SERVICE_OPTIONS, SERVICE_IDS, DEFAULT_SERVICE } = require('../src/lib/validators');
 
 test('isValidEmail accepts empty string (optional field)', () => {
   assert.equal(isValidEmail(''), true);
@@ -177,6 +177,19 @@ test('DEFAULT_SERVICE is Automatic Calculation (the first option)', () => {
 
 test('SERVICE_OPTIONS contains all 27 services', () => {
   assert.equal(SERVICE_OPTIONS.length, 27);
+});
+
+test('every service has a unique numeric ID matching the Origami CRM (1-27)', () => {
+  const ids = SERVICE_OPTIONS.map(s => SERVICE_IDS[s]);
+  assert.equal(ids.length, 27);
+  assert.deepEqual([...ids].sort((a, b) => a - b), Array.from({ length: 27 }, (_, i) => i + 1));
+});
+
+test('SERVICE_IDS spot checks match the Origami services list', () => {
+  assert.equal(SERVICE_IDS['Automatic Calculation'], 1);
+  assert.equal(SERVICE_IDS['Open legal case labor law'], 5);
+  assert.equal(SERVICE_IDS['Pikadon release'], 9);
+  assert.equal(SERVICE_IDS['Job Search Counseling'], 27);
 });
 
 test('validateForm rejects a name written in a non-Hebrew/English script', () => {

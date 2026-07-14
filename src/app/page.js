@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { LOGO_B64 } from "../lib/logo";
-import { validateForm, SERVICE_OPTIONS, DEFAULT_SERVICE } from "../lib/validators";
+import { validateForm, SERVICE_OPTIONS, SERVICE_IDS, DEFAULT_SERVICE } from "../lib/validators";
 import { LANGUAGES } from "../lib/languages";
 
 // UI dictionaries are pre-generated via Google Translate (one JSON per
@@ -179,6 +179,7 @@ export default function Home() {
       formData.append("phone", f.phone);
       formData.append("email", f.email || "");
       formData.append("service", f.service);
+      formData.append("serviceId", String(SERVICE_IDS[f.service]));
       formData.append("file", file);
 
       const res = await fetch(WEBHOOK_URL, { method: "POST", body: formData });

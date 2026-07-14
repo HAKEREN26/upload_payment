@@ -35,35 +35,39 @@ function isValidFile(file) {
   return ALLOWED_FILE_TYPE_PREFIXES.some(prefix => (file.type || '').startsWith(prefix));
 }
 
-const SERVICE_OPTIONS = [
-  'Automatic Calculation',
-  'Pay slip calculation',
-  'Health Insurance with visa',
-  'Health Insurance for tourist',
-  'open legal case labor law',
-  'open legal case injury',
-  'Traffic case',
-  'lawyer meeting for advice',
-  'Pikadon release',
-  'Pikadon check',
-  'Driver License Conversion',
-  'Driver License Conversion with notary',
-  'Car Ownership Transfer',
-  'Car insurance',
-  'Traffic Fine & tolls Payments',
-  'E-Bike and Scooter Registration',
-  'Police Clearance Certificate',
-  'Apostille & Translation',
-  'Visas',
-  'DNA test for fatherhood prove',
-  'Refugee application',
-  'Refugee interview',
-  'Refugee status check',
-  'Refugee Rescheduling an appointment',
-  'Hakeren talk',
-  'Hakeren mani',
-  'Job Search Counseling',
-];
+// Service names and IDs mirror the Origami CRM services list
+// (hakeren.origami.ms/-/services/services) — names verbatim, IDs are the
+// CRM's Service Number. Keep both in sync with the CRM.
+const SERVICE_IDS = {
+  'Automatic Calculation': 1,
+  'Pay slip calculation': 2,
+  'Health Insurance with visa': 3,
+  'Health Insurance for tourist': 4,
+  'Open legal case labor law': 5,
+  'Open legal case injury': 6,
+  'Traffic case': 7,
+  'Lawyer meeting for advice': 8,
+  'Pikadon release': 9,
+  'Pikadon check': 10,
+  'Driver License Conversion': 11,
+  'Driver License Conversion with notary': 12,
+  'Car Ownership Transfer': 13,
+  'Car insurance': 14,
+  'Traffic Fine & tolls Payments': 15,
+  'E-Bike and Scooter Registration': 16,
+  'Police Clearance Certificate': 17,
+  'Apostille & Translation': 18,
+  'Visas': 19,
+  'DNA test for fatherhood prove': 20,
+  'Refugee application': 21,
+  'Refugee interview': 22,
+  'Refugee status check': 23,
+  'Refugee Rescheduling an appointment': 24,
+  'Hakeren talk': 25,
+  'Hakeren mani': 26,
+  'Job Search Counseling': 27,
+};
+const SERVICE_OPTIONS = Object.keys(SERVICE_IDS);
 const DEFAULT_SERVICE = SERVICE_OPTIONS[0];
 
 function validateForm({ name, passportId, phone, email, service, file }) {
@@ -90,5 +94,6 @@ module.exports = {
   validateForm,
   MAX_FILE_SIZE_BYTES,
   SERVICE_OPTIONS,
+  SERVICE_IDS,
   DEFAULT_SERVICE,
 };
