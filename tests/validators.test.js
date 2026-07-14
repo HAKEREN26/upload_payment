@@ -170,8 +170,13 @@ test('validateForm accepts any option from SERVICE_OPTIONS', () => {
   }
 });
 
-test('DEFAULT_SERVICE is Salary Rights Calculation', () => {
-  assert.equal(DEFAULT_SERVICE, 'Salary Rights Calculation');
+test('DEFAULT_SERVICE is Automatic Calculation (the first option)', () => {
+  assert.equal(DEFAULT_SERVICE, 'Automatic Calculation');
+  assert.equal(DEFAULT_SERVICE, SERVICE_OPTIONS[0]);
+});
+
+test('SERVICE_OPTIONS contains all 27 services', () => {
+  assert.equal(SERVICE_OPTIONS.length, 27);
 });
 
 test('validateForm rejects a name written in a non-Hebrew/English script', () => {

@@ -36,11 +36,33 @@ function isValidFile(file) {
 }
 
 const SERVICE_OPTIONS = [
-  'Salary Rights Calculation',
-  'Visa & Immigration',
-  'Pikadon (Deposit) Release',
+  'Automatic Calculation',
+  'Pay slip calculation',
+  'Health Insurance with visa',
+  'Health Insurance for tourist',
+  'open legal case labor law',
+  'open legal case injury',
+  'Traffic case',
+  'lawyer meeting for advice',
+  'Pikadon release',
+  'Pikadon check',
   'Driver License Conversion',
-  'E-Bike & Scooter Plate',
+  'Driver License Conversion with notary',
+  'Car Ownership Transfer',
+  'Car insurance',
+  'Traffic Fine & tolls Payments',
+  'E-Bike and Scooter Registration',
+  'Police Clearance Certificate',
+  'Apostille & Translation',
+  'Visas',
+  'DNA test for fatherhood prove',
+  'Refugee application',
+  'Refugee interview',
+  'Refugee status check',
+  'Refugee Rescheduling an appointment',
+  'Hakeren talk',
+  'Hakeren mani',
+  'Job Search Counseling',
 ];
 const DEFAULT_SERVICE = SERVICE_OPTIONS[0];
 
